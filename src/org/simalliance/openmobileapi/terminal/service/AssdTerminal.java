@@ -1,21 +1,11 @@
 package org.simalliance.openmobileapi.terminal.service;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.SystemProperties;
-import android.telephony.IccOpenLogicalChannelResponse;
-import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.widget.Toast;
-import com.android.internal.telephony.TelephonyProperties;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.MissingResourceException;
-import java.util.NoSuchElementException;
 
 
 import org.simalliance.openmobileapi.terminal.service.ITerminalService;
