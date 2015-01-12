@@ -17,12 +17,10 @@
  * Contributed by: Giesecke & Devrient GmbH.
  */
 
-package org.simalliance.openmobileapi.terminal.service;
+package org.simalliance.openmobileapi.assdterminal;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import org.simalliance.openmobileapi.terminal.service.CardException;
 
 import java.lang.reflect.Constructor;
 

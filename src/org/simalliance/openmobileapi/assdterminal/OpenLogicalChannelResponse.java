@@ -1,4 +1,4 @@
-package org.simalliance.openmobileapi.terminal.service;
+package org.simalliance.openmobileapi.assdterminal;
 
 import android.os.Parcel;
 import android.os.Parcelable;

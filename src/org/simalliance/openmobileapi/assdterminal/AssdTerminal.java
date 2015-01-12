@@ -1,4 +1,4 @@
-package org.simalliance.openmobileapi.terminal.service;
+package org.simalliance.openmobileapi.assdterminal;
 
 import android.app.Service;
 import android.content.Intent;
@@ -8,7 +8,7 @@ import android.os.RemoteException;
 import java.util.MissingResourceException;
 
 
-import org.simalliance.openmobileapi.terminal.service.ITerminalService;
+import org.simalliance.openmobileapi.assdterminal.ITerminalService;
 
 /**
  * Created by sevilser on 18/12/14.
