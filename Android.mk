@@ -9,5 +9,6 @@ LOCAL_PACKAGE_NAME := AssdTerminal
 LOCAL_CERTIFICATE := platform
 
 LOCAL_PROGUARD_ENABLED := disabled
+LOCAL_DEX_PREOPT := false
 
 include $(BUILD_PACKAGE)
