@@ -7,8 +7,11 @@ import android.os.RemoteException;
 
 import java.util.MissingResourceException;
 
+import org.simalliance.openmobileapi.service.ITerminalService;
+import org.simalliance.openmobileapi.service.OpenLogicalChannelResponse;
+import org.simalliance.openmobileapi.service.SmartcardError;
+import org.simalliance.openmobileapi.service.CardException;
 
-import org.simalliance.openmobileapi.assdterminal.ITerminalService;
 
 /**
  * Created by sevilser on 18/12/14.
@@ -35,7 +38,7 @@ public final class AssdTerminal extends Service {
 
         @Override
         public String getType() {
-            return _SD_TERMINAL;
+            return AssdTerminal.getType();
         }
 
 
@@ -290,7 +293,7 @@ public final class AssdTerminal extends Service {
     }
 
     public static String getType() {
-        return "SIM";
+        return _SD_TERMINAL;
     }
     /*@Override TODO
     protected void internalConnect() throws CardException {
