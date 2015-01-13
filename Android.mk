@@ -3,6 +3,8 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
+LOCAL_AIDL_INCLUDES := packages/apps/SmartCardService/openmobileapi/src/org/simalliance/openmobileapi/service
+
 LOCAL_PACKAGE_NAME := AssdTerminal
 LOCAL_CERTIFICATE := platform
 
