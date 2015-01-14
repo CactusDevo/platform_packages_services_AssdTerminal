@@ -20,9 +20,11 @@ public final class AssdTerminal extends Service {
 
     private static final String TAG = "AssdTerminal";
 
-    private static boolean JNILoaded = false;
-
     public static final String _SD_TERMINAL = "SD";
+
+    private final ITerminalService.Stub mTerminalBinder = new TerminalServiceImplementation();
+
+    private static boolean JNILoaded = false;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -34,8 +36,100 @@ public final class AssdTerminal extends Service {
 
     }
 
-    private final ITerminalService.Stub mTerminalBinder = new ITerminalService.Stub() {
+    private native void Close() throws Exception;
 
+    private native boolean Open() throws Exception;
+
+    private native boolean IsPresent() throws Exception;
+
+    private native byte[] Transmit(byte[] command) throws Exception;
+
+    /**
+     * Creates a formatted exception message.
+     *
+     * @param commandName the name of the command. <code>null</code> if not
+     *            specified.
+     * @param sw the response status word.
+     * @return a formatted exception message.
+     */
+    static String createMessage(String commandName, int sw) {
+        StringBuffer message = new StringBuffer();
+        if (commandName != null) {
+            message.append(commandName).append(" ");
+        }
+        message.append("SW1/2 error: ");
+        message.append(Integer.toHexString(sw | 0x10000).substring(1));
+        return message.toString();
+    }
+
+    /**
+     * Creates a formatted exception message.
+     *
+     * @param commandName the name of the command. <code>null</code> if not
+     *            specified.
+     * @param message the message to be formatted.
+     * @return a formatted exception message.
+     */
+    static String createMessage(String commandName, String message) {
+        if (commandName == null) {
+            return message;
+        }
+        return commandName + " " + message;
+    }
+
+    /**
+     * Returns a concatenated response.
+     *
+     * @param r1 the first part of the response.
+     * @param r2 the second part of the response.
+     * @param length the number of bytes of the second part to be appended.
+     * @return a concatenated response.
+     */
+    static byte[] appendResponse(byte[] r1, byte[] r2, int length) {
+        byte[] rsp = new byte[r1.length + length];
+        System.arraycopy(r1, 0, rsp, 0, r1.length);
+        System.arraycopy(r2, 0, rsp, r1.length, length);
+        return rsp;
+    }
+
+    public static String getType() {
+        return _SD_TERMINAL;
+    }
+    /*@Override TODO
+    protected void internalConnect() throws CardException {
+        if (JNILoaded == false) {
+            throw new CardException("JNI failed");
+        }
+
+        try {
+            if (Open() == false) {
+                throw new CardException("open SE failed");
+            }
+        } catch (Exception e) {
+            throw new CardException("open SE failed");
+        }
+        mDefaultApplicationSelectedOnBasicChannel = true;
+        mIsConnected = true;
+    }
+
+    @Override
+    protected void internalDisconnect() throws CardException {
+        if (JNILoaded == false) {
+            throw new CardException("JNI failed");
+        }
+
+        try {
+            Close();
+        } catch (Exception e) {
+        } finally {
+            mIsConnected = false;
+        }
+    }*/
+
+    /**
+     * The Terminal service interface implementation.
+     */
+    final class TerminalServiceImplementation extends ITerminalService.Stub {
         @Override
         public String getType() {
             return AssdTerminal.getType();
@@ -234,95 +328,5 @@ public final class AssdTerminal extends Service {
             }
             return rsp;
         }
-    };
-
-    private native void Close() throws Exception;
-
-    private native boolean Open() throws Exception;
-
-    private native boolean IsPresent() throws Exception;
-
-    private native byte[] Transmit(byte[] command) throws Exception;
-
-    /**
-     * Creates a formatted exception message.
-     *
-     * @param commandName the name of the command. <code>null</code> if not
-     *            specified.
-     * @param sw the response status word.
-     * @return a formatted exception message.
-     */
-    static String createMessage(String commandName, int sw) {
-        StringBuffer message = new StringBuffer();
-        if (commandName != null) {
-            message.append(commandName).append(" ");
-        }
-        message.append("SW1/2 error: ");
-        message.append(Integer.toHexString(sw | 0x10000).substring(1));
-        return message.toString();
     }
-
-    /**
-     * Creates a formatted exception message.
-     *
-     * @param commandName the name of the command. <code>null</code> if not
-     *            specified.
-     * @param message the message to be formatted.
-     * @return a formatted exception message.
-     */
-    static String createMessage(String commandName, String message) {
-        if (commandName == null) {
-            return message;
-        }
-        return commandName + " " + message;
-    }
-
-    /**
-     * Returns a concatenated response.
-     *
-     * @param r1 the first part of the response.
-     * @param r2 the second part of the response.
-     * @param length the number of bytes of the second part to be appended.
-     * @return a concatenated response.
-     */
-    static byte[] appendResponse(byte[] r1, byte[] r2, int length) {
-        byte[] rsp = new byte[r1.length + length];
-        System.arraycopy(r1, 0, rsp, 0, r1.length);
-        System.arraycopy(r2, 0, rsp, r1.length, length);
-        return rsp;
-    }
-
-    public static String getType() {
-        return _SD_TERMINAL;
-    }
-    /*@Override TODO
-    protected void internalConnect() throws CardException {
-        if (JNILoaded == false) {
-            throw new CardException("JNI failed");
-        }
-
-        try {
-            if (Open() == false) {
-                throw new CardException("open SE failed");
-            }
-        } catch (Exception e) {
-            throw new CardException("open SE failed");
-        }
-        mDefaultApplicationSelectedOnBasicChannel = true;
-        mIsConnected = true;
-    }
-
-    @Override
-    protected void internalDisconnect() throws CardException {
-        if (JNILoaded == false) {
-            throw new CardException("JNI failed");
-        }
-
-        try {
-            Close();
-        } catch (Exception e) {
-        } finally {
-            mIsConnected = false;
-        }
-    }*/
 }
