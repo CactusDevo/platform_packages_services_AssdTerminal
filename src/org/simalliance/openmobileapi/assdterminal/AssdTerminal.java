@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
 import java.util.MissingResourceException;
 
@@ -20,7 +21,7 @@ public final class AssdTerminal extends Service {
 
     private static final String TAG = "AssdTerminal";
 
-    public static final String _SD_TERMINAL = "SD";
+    public static final String SD_TERMINAL = "SD";
 
     private final ITerminalService.Stub mTerminalBinder = new TerminalServiceImplementation();
 
@@ -53,7 +54,7 @@ public final class AssdTerminal extends Service {
      * @return a formatted exception message.
      */
     static String createMessage(String commandName, int sw) {
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
         if (commandName != null) {
             message.append(commandName).append(" ");
         }
@@ -93,7 +94,7 @@ public final class AssdTerminal extends Service {
     }
 
     public static String getType() {
-        return _SD_TERMINAL;
+        return SD_TERMINAL;
     }
     /*@Override TODO
     protected void internalConnect() throws CardException {
@@ -145,6 +146,7 @@ public final class AssdTerminal extends Service {
             try {
                 rsp = transmit(manageChannelCommand, 3, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
             } catch (CardException e) {
+                Log.e(TAG, "Error while transmitting Manage Channel", e);
                 throw new RemoteException();
             }
             if (rsp.length != 3) {
@@ -172,6 +174,7 @@ public final class AssdTerminal extends Service {
                 try {
                     transmit(manageChannelClose, 2, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
                 } catch (CardException e) {
+                    Log.e(TAG, "Error while Manage Channel", e);
                     throw new RemoteException();
                 }
             }
@@ -179,7 +182,7 @@ public final class AssdTerminal extends Service {
 
         @Override
         public byte[] internalTransmit(byte[] command, SmartcardError error) throws RemoteException {
-            if (JNILoaded == false) {
+            if (!JNILoaded) {
                 error.setError(CardException.class, "JNI failed");
                 throw new RemoteException();
             }
@@ -191,6 +194,7 @@ public final class AssdTerminal extends Service {
                 }
                 return response;
             } catch (Exception e) {
+                Log.e(TAG, "Error while transmit command", e);
                 error.setError(CardException.class, "transmit failed");
                 throw new RemoteException();
             }
@@ -203,13 +207,14 @@ public final class AssdTerminal extends Service {
 
         @Override
         public boolean isCardPresent() throws RemoteException {
-            if (JNILoaded == false) {
+            if (!JNILoaded) {
                 return false;
             }
 
             try {
                 return IsPresent();
             } catch (Exception e) {
+                Log.e(TAG, "Error while getting if sd is present", e);
                 return false;
             }
         }
@@ -252,11 +257,9 @@ public final class AssdTerminal extends Service {
                             createMessage(commandName, "transmit failed"), e);
                 }
             }
-            if (minRspLength > 0) {
-                if (rsp == null || rsp.length < minRspLength) {
-                    throw new CardException(
-                            createMessage(commandName, "response too small"));
-                }
+            if (minRspLength > 0 && (rsp == null || rsp.length < minRspLength)) {
+                throw new CardException(
+                        createMessage(commandName, "response too small"));
             }
             if (swMask != 0) {
                 if (rsp == null || rsp.length < 2) {
@@ -289,6 +292,7 @@ public final class AssdTerminal extends Service {
             try {
                 rsp = internalTransmit(command, error);
             } catch (RemoteException e) {
+                Log.e(TAG, "Error while internal transmit", e);
                 throw new CardException(error.getMessage());
             }
 
@@ -300,6 +304,7 @@ public final class AssdTerminal extends Service {
                     try {
                         rsp = internalTransmit(command, error);
                     } catch (RemoteException e) {
+                        Log.e(TAG, "Error while internal transmit", e);
                         throw new CardException(error.getMessage());
                     }
                 } else if (sw1 == 0x61) {
@@ -313,6 +318,7 @@ public final class AssdTerminal extends Service {
                         try {
                             rsp = internalTransmit(getResponseCmd,error);
                         } catch (RemoteException e) {
+                            Log.e(TAG, "Error while internal transmit", e);
                             throw new CardException(error.getMessage());
                         }
                         if (rsp.length >= 2 && rsp[rsp.length - 2] == 0x61) {
