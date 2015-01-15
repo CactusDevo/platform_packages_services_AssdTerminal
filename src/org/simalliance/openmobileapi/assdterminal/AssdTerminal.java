@@ -35,7 +35,7 @@ public final class AssdTerminal extends Service {
 
     @Override
     public void onCreate() {
-        if (JNILoaded == false) {
+        if (!JNILoaded) {
             return;
         }
         try {
@@ -48,7 +48,7 @@ public final class AssdTerminal extends Service {
 
     @Override
     public void onDestroy() {
-        if (JNILoaded == true) {
+        if (JNILoaded) {
             try {
                 close();
             } catch (Exception e) {
@@ -140,6 +140,10 @@ public final class AssdTerminal extends Service {
 
         @Override
         public OpenLogicalChannelResponse internalOpenLogicalChannel(byte[] aid, SmartcardError error) throws RemoteException {
+            if (!JNILoaded || !isOpenedSuccesful) {
+                error.setError(CardException.class, "JNI failed or open SE failed");
+                throw new RemoteException();
+            }
             byte[] manageChannelCommand = new byte[] {
                     0x00, 0x70, 0x00, 0x00, 0x01
             };
@@ -164,6 +168,10 @@ public final class AssdTerminal extends Service {
         @Override
         public void internalCloseLogicalChannel(int channelNumber, SmartcardError error)
                 throws RemoteException {
+            if (!JNILoaded || !isOpenedSuccesful) {
+                error.setError(CardException.class, "JNI failed or open SE failed");
+                throw new RemoteException();
+            }
             if (channelNumber > 0) {
                 byte cla = (byte) channelNumber;
                 if (channelNumber > 3) {
@@ -183,11 +191,10 @@ public final class AssdTerminal extends Service {
 
         @Override
         public byte[] internalTransmit(byte[] command, SmartcardError error) throws RemoteException {
-            if (!JNILoaded) {
-                error.setError(CardException.class, "JNI failed");
+            if (!JNILoaded || !isOpenedSuccesful) {
+                error.setError(CardException.class, "JNI failed or open SE failed");
                 throw new RemoteException();
             }
-
             try {
                 byte[] response = AssdTerminal.this.transmit(command);
                 if (response == null) {
@@ -208,10 +215,9 @@ public final class AssdTerminal extends Service {
 
         @Override
         public boolean isCardPresent() throws RemoteException {
-            if (!JNILoaded) {
+            if (!JNILoaded || !isOpenedSuccesful) {
                 return false;
             }
-
             try {
                 return isPresent();
             } catch (Exception e) {
