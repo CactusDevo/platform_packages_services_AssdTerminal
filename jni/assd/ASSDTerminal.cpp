@@ -33,11 +33,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 
 /*
- * Class:     android_smartcard_terminals_ASSDTerminal
- * Method:    Close
+ * Class:     org_simalliance_openmobileapi_assdterminal_AssdTerminal
+ * Method:    close
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSDTerminal_Close
+JNIEXPORT void JNICALL Java_org_simalliance_openmobileapi_assdterminal_AssdTerminal_close
 (JNIEnv *env, jobject obj) {
     if (fd >= 0)
         close(fd);
@@ -45,11 +45,11 @@ JNIEXPORT void JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSD
 }
 
 /*
- * Class:     android_smartcard_terminals_ASSDTerminal
- * Method:    Open
+ * Class:     org_simalliance_openmobileapi_assdterminal_AssdTerminal
+ * Method:    open
  * Signature: (I)I
  */
-JNIEXPORT jboolean JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSDTerminal_Open
+JNIEXPORT jboolean JNICALL Java_org_simalliance_openmobileapi_assdterminal_AssdTerminal_open
 (JNIEnv *env, jobject obj) {
     if (fd >= 0)
         return false;
@@ -68,7 +68,7 @@ JNIEXPORT jboolean JNICALL Java_org_simalliance_openmobileapi_service_terminals_
 }
 
 JNIEXPORT
-jboolean JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSDTerminal_IsPresent
+jboolean JNICALL Java_org_simalliance_openmobileapi_assdterminal_AssdTerminal_isPresent
 (JNIEnv *env, jobject obj) {
     int result;
     int f = fd;
@@ -88,12 +88,12 @@ jboolean JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSDTermin
 }
 
 /*
- * Class:     android_smartcard_terminals_ASSDTerminal
- * Method:    Transmit
+ * Class:     org_simalliance_openmobileapi_assdterminal_AssdTerminal
+ * Method:    transmit
  * Signature: (I[B)[B
  */
 JNIEXPORT
-jbyteArray JNICALL Java_org_simalliance_openmobileapi_service_terminals_ASSDTerminal_Transmit
+jbyteArray JNICALL Java_org_simalliance_openmobileapi_assdterminal_AssdTerminal_transmit
 (JNIEnv *env, jobject obj, jbyteArray jcommand) {
     uint8_t* buf = NULL;
     int resultLength;

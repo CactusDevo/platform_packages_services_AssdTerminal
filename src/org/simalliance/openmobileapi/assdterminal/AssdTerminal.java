@@ -27,6 +27,7 @@ public final class AssdTerminal extends Service {
 
     private static boolean JNILoaded = false;
 
+    private boolean isOpenedSuccesful;
     @Override
     public IBinder onBind(Intent intent) {
         return mTerminalBinder;
@@ -34,16 +35,46 @@ public final class AssdTerminal extends Service {
 
     @Override
     public void onCreate() {
-
+        if (JNILoaded == false) {
+            return;
+        }
+        try {
+            isOpenedSuccesful = open();
+        } catch (Exception e) {
+            Log.e(TAG, "Error while Open method", e);
+            isOpenedSuccesful = false;
+        }
     }
 
-    private native void Close() throws Exception;
+    @Override
+    public void onDestroy() {
+        if (JNILoaded == true) {
+            try {
+                close();
+            } catch (Exception e) {
+                Log.e(TAG, "Error while Open method", e);
+            }
+        }
+        isOpenedSuccesful = false;
+        super.onDestroy();
+    }
 
-    private native boolean Open() throws Exception;
 
-    private native boolean IsPresent() throws Exception;
+    static {
+        try {
+            Runtime.getRuntime().loadLibrary("assd");
+            JNILoaded = true;
+        } catch (Throwable t) {
+        }
+    }
 
-    private native byte[] Transmit(byte[] command) throws Exception;
+    private native void close() throws Exception;
+
+    private native boolean open() throws Exception;
+
+    private native boolean isPresent() throws Exception;
+
+    private native byte[] transmit(byte[] command) throws Exception;
 
     /**
      * Creates a formatted exception message.
@@ -96,36 +127,6 @@ public final class AssdTerminal extends Service {
     public static String getType() {
         return SD_TERMINAL;
     }
-    /*@Override TODO
-    protected void internalConnect() throws CardException {
-        if (JNILoaded == false) {
-            throw new CardException("JNI failed");
-        }
-
-        try {
-            if (Open() == false) {
-                throw new CardException("open SE failed");
-            }
-        } catch (Exception e) {
-            throw new CardException("open SE failed");
-        }
-        mDefaultApplicationSelectedOnBasicChannel = true;
-        mIsConnected = true;
-    }
-
-    @Override
-    protected void internalDisconnect() throws CardException {
-        if (JNILoaded == false) {
-            throw new CardException("JNI failed");
-        }
-
-        try {
-            Close();
-        } catch (Exception e) {
-        } finally {
-            mIsConnected = false;
-        }
-    }*/
 
     /**
      * The Terminal service interface implementation.
@@ -188,7 +189,7 @@ public final class AssdTerminal extends Service {
             }
 
             try {
-                byte[] response = Transmit(command);
+                byte[] response = AssdTerminal.this.transmit(command);
                 if (response == null) {
                     throw new CardException("transmit failed");
                 }
@@ -212,7 +213,7 @@ public final class AssdTerminal extends Service {
             }
 
             try {
-                return IsPresent();
+                return isPresent();
             } catch (Exception e) {
                 Log.e(TAG, "Error while getting if sd is present", e);
                 return false;
