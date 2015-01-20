@@ -142,7 +142,7 @@ public final class AssdTerminal extends Service {
         public OpenLogicalChannelResponse internalOpenLogicalChannel(byte[] aid, SmartcardError error) throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
                 error.setError(CardException.class, "JNI failed or open SE failed");
-                throw new RemoteException();
+                return null;
             }
             byte[] manageChannelCommand = new byte[] {
                     0x00, 0x70, 0x00, 0x00, 0x01
@@ -152,14 +152,17 @@ public final class AssdTerminal extends Service {
                 rsp = transmit(manageChannelCommand, 3, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
             } catch (CardException e) {
                 Log.e(TAG, "Error while transmitting Manage Channel", e);
-                throw new RemoteException();
+                error.setError(CardException.class, e.getMessage());
+                return null;
             }
             if (rsp.length != 3) {
-                throw new MissingResourceException("unsupported MANAGE CHANNEL response data", "", "");
+                error.setError(MissingResourceException.class, "unsupported MANAGE CHANNEL response data");
+                return null;
             }
             int channelNumber = rsp[0] & 0xFF;
             if (channelNumber == 0 || channelNumber > 19) {
-                throw new MissingResourceException("invalid logical channel number returned", "", "");
+                error.setError(MissingResourceException.class, "invalid logical channel number returned");
+                return null;
             }
 
             return new OpenLogicalChannelResponse(channelNumber, null);
@@ -170,7 +173,7 @@ public final class AssdTerminal extends Service {
                 throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
                 error.setError(CardException.class, "JNI failed or open SE failed");
-                throw new RemoteException();
+                return;
             }
             if (channelNumber > 0) {
                 byte cla = (byte) channelNumber;
@@ -184,7 +187,7 @@ public final class AssdTerminal extends Service {
                     transmit(manageChannelClose, 2, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
                 } catch (CardException e) {
                     Log.e(TAG, "Error while Manage Channel", e);
-                    throw new RemoteException();
+                    error.setError(CardException.class, "Error while Manage Channel");
                 }
             }
         }
@@ -193,7 +196,7 @@ public final class AssdTerminal extends Service {
         public byte[] internalTransmit(byte[] command, SmartcardError error) throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
                 error.setError(CardException.class, "JNI failed or open SE failed");
-                throw new RemoteException();
+                return null;
             }
             try {
                 byte[] response = AssdTerminal.this.transmit(command);
@@ -204,7 +207,7 @@ public final class AssdTerminal extends Service {
             } catch (Exception e) {
                 Log.e(TAG, "Error while transmit command", e);
                 error.setError(CardException.class, "transmit failed");
-                throw new RemoteException();
+                return null;
             }
         }
 
