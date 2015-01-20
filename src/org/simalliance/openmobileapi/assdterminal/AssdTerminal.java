@@ -196,7 +196,7 @@ public final class AssdTerminal extends Service {
         public byte[] internalTransmit(byte[] command, SmartcardError error) throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
                 error.setError(CardException.class, "JNI failed or open SE failed");
-                return null;
+                return new byte[0];
             }
             try {
                 byte[] response = AssdTerminal.this.transmit(command);
@@ -207,7 +207,7 @@ public final class AssdTerminal extends Service {
             } catch (Exception e) {
                 Log.e(TAG, "Error while transmit command", e);
                 error.setError(CardException.class, "transmit failed");
-                return null;
+                return new byte[0];
             }
         }
 
