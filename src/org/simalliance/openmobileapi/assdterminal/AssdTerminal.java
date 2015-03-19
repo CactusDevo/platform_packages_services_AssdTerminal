@@ -1,7 +1,10 @@
 package org.simalliance.openmobileapi.assdterminal;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -23,9 +26,13 @@ public final class AssdTerminal extends Service {
 
     public static final String SD_TERMINAL = "SD";
 
+    public static final String SD_STATE_CHANGE_ACTION = "org.simalliance.openmobileapi.AssdTerminal";
+
     private final ITerminalService.Stub mTerminalBinder = new TerminalServiceImplementation();
 
     private static boolean JNILoaded = false;
+
+    private BroadcastReceiver mMediaReceiver;
 
     private boolean isOpenedSuccesful;
     @Override
@@ -35,6 +42,7 @@ public final class AssdTerminal extends Service {
 
     @Override
     public void onCreate() {
+        registerMediaMountedEvent(this);
         if (!JNILoaded) {
             return;
         }
@@ -56,6 +64,7 @@ public final class AssdTerminal extends Service {
             }
         }
         isOpenedSuccesful = false;
+        unregisterMediaMountedEvent(getApplicationContext());
         super.onDestroy();
     }
 
@@ -126,6 +135,35 @@ public final class AssdTerminal extends Service {
 
     public static String getType() {
         return SD_TERMINAL;
+    }
+
+    private void registerMediaMountedEvent(Context context) {
+        Log.v(TAG, "register MEDIA_MOUNTED event");
+
+        IntentFilter intentFilter = new IntentFilter(
+                "android.intent.action.MEDIA_MOUNTED");
+        mMediaReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final boolean mediaMounted = intent.getAction().equals(
+                        "android.intent.action.MEDIA_MOUNTED");
+                if (mediaMounted) {
+                    Log.i(TAG, "New Media is mounted. Checking access rules"
+                            + " for updates.");
+                    Intent i = new Intent(SD_STATE_CHANGE_ACTION);
+                    sendBroadcast(i);
+                }
+            }
+        };
+        context.registerReceiver(mMediaReceiver, intentFilter);
+    }
+
+    private void unregisterMediaMountedEvent(Context context) {
+        if (mMediaReceiver != null) {
+            Log.v(TAG, "unregister MEDIA_MOUNTED event");
+            context.unregisterReceiver(mMediaReceiver);
+            mMediaReceiver = null;
+        }
     }
 
     /**
@@ -349,6 +387,11 @@ public final class AssdTerminal extends Service {
         public byte[] simIOExchange(int fileID, String filePath, byte[] cmd, org.simalliance.openmobileapi.service.SmartcardError error)
                 throws RemoteException {
             throw new RemoteException("SIM IO error!");
+        }
+
+        @Override
+        public String getSEChangeAction() {
+            return SD_STATE_CHANGE_ACTION;
         }
     }
 }
