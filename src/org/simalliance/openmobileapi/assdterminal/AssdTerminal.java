@@ -14,7 +14,6 @@ import java.util.MissingResourceException;
 import org.simalliance.openmobileapi.service.ITerminalService;
 import org.simalliance.openmobileapi.service.OpenLogicalChannelResponse;
 import org.simalliance.openmobileapi.service.SmartcardError;
-import org.simalliance.openmobileapi.service.CardException;
 
 
 /**
@@ -179,18 +178,16 @@ public final class AssdTerminal extends Service {
         @Override
         public OpenLogicalChannelResponse internalOpenLogicalChannel(byte[] aid, SmartcardError error) throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
-                error.setError(CardException.class, "JNI failed or open SE failed");
+                error.setError(RuntimeException.class, "JNI failed or open SE failed");
                 return null;
             }
             byte[] manageChannelCommand = new byte[] {
                     0x00, 0x70, 0x00, 0x00, 0x01
             };
             byte[] rsp = new byte[0];
-            try {
-                rsp = transmit(manageChannelCommand, 3, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
-            } catch (CardException e) {
-                Log.e(TAG, "Error while transmitting Manage Channel", e);
-                error.setError(CardException.class, e.getMessage());
+            rsp = transmit(manageChannelCommand, 3, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
+            if(error.createException() != null) {
+                Log.e(TAG, "Error while transmitting Manage Channel");
                 return null;
             }
             if (rsp.length != 3) {
@@ -210,7 +207,7 @@ public final class AssdTerminal extends Service {
         public void internalCloseLogicalChannel(int channelNumber, SmartcardError error)
                 throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
-                error.setError(CardException.class, "JNI failed or open SE failed");
+                error.setError(RuntimeException.class, "JNI failed or open SE failed");
                 return;
             }
             if (channelNumber > 0) {
@@ -221,30 +218,27 @@ public final class AssdTerminal extends Service {
                 byte[] manageChannelClose = new byte[] {
                         cla, 0x70, (byte) 0x80, (byte) channelNumber
                 };
-                try {
-                    transmit(manageChannelClose, 2, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
-                } catch (CardException e) {
-                    Log.e(TAG, "Error while Manage Channel", e);
-                    error.setError(CardException.class, "Error while Manage Channel");
-                }
+
+                transmit(manageChannelClose, 2, 0x9000, 0xFFFF, "MANAGE CHANNEL", error);
+
             }
         }
 
         @Override
         public byte[] internalTransmit(byte[] command, SmartcardError error) throws RemoteException {
             if (!JNILoaded || !isOpenedSuccesful) {
-                error.setError(CardException.class, "JNI failed or open SE failed");
+                error.setError(RuntimeException.class, "JNI failed or open SE failed");
                 return new byte[0];
             }
             try {
                 byte[] response = AssdTerminal.this.transmit(command);
                 if (response == null) {
-                    throw new CardException("transmit failed");
+                    error.setError(RuntimeException.class, "transmit failed");
                 }
                 return response;
             } catch (Exception e) {
                 Log.e(TAG, "Error while transmit command", e);
-                error.setError(CardException.class, "transmit failed");
+                error.setError(RuntimeException.class, "transmit failed");
                 return new byte[0];
             }
         }
@@ -283,8 +277,6 @@ public final class AssdTerminal extends Service {
          * @param commandName the name of the smart card command for logging
          *            purposes. May be <code>null</code>.
          * @return the response received.
-         * @throws CardException if the transmit operation or the minimum response
-         *             length check or the status word check failed.
          */
         public synchronized byte[] transmit(
                 byte[] cmd,
@@ -292,33 +284,34 @@ public final class AssdTerminal extends Service {
                 int swExpected,
                 int swMask,
                 String commandName,
-                SmartcardError error)
-                throws CardException {
+                SmartcardError error) {
             byte[] rsp = null;
             try {
                 rsp = protocolTransmit(cmd, error);
             } catch (Exception e) {
                 if (commandName == null) {
-                    throw new CardException(e.getMessage());
+                    error.setError(RuntimeException.class, e.getMessage());
+                    return null;
                 } else {
-                    throw new CardException(
-                            createMessage(commandName, "transmit failed"), e);
+                    error.setError(RuntimeException.class, createMessage(commandName, "transmit failed"));
+                    return null;
                 }
             }
             if (minRspLength > 0 && (rsp == null || rsp.length < minRspLength)) {
-                throw new CardException(
-                        createMessage(commandName, "response too small"));
+                error.setError(RuntimeException.class, createMessage(commandName, "response too small"));
+                return null;
             }
             if (swMask != 0) {
                 if (rsp == null || rsp.length < 2) {
-                    throw new CardException(
-                            createMessage(commandName, "SW1/2 not available"));
+                    error.setError(RuntimeException.class, createMessage(commandName, "SW1/2 not available"));
+                    return null;
                 }
                 int sw1 = rsp[rsp.length - 2] & 0xFF;
                 int sw2 = rsp[rsp.length - 1] & 0xFF;
                 int sw = (sw1 << 8) | sw2;
                 if ((sw & swMask) != (swExpected & swMask)) {
-                    throw new CardException(createMessage(commandName, sw));
+                    error.setError(RuntimeException.class, createMessage(commandName, sw));
+                    return null;
                 }
             }
             return rsp;
@@ -331,17 +324,16 @@ public final class AssdTerminal extends Service {
          *
          * @param cmd the command to be transmitted.
          * @return the response received.
-         * @throws CardException if the transmit operation failed.
          */
-        protected synchronized byte[] protocolTransmit(byte[] cmd, SmartcardError error)
-                throws CardException {
+        protected synchronized byte[] protocolTransmit(byte[] cmd, SmartcardError error) {
             byte[] command = cmd;
             byte[] rsp = null;
             try {
                 rsp = internalTransmit(command, error);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while internal transmit", e);
-                throw new CardException(error.getMessage());
+                error.setError(RuntimeException.class, error.getMessage());
+                return null;
             }
 
             if (rsp.length >= 2) {
@@ -353,7 +345,8 @@ public final class AssdTerminal extends Service {
                         rsp = internalTransmit(command, error);
                     } catch (RemoteException e) {
                         Log.e(TAG, "Error while internal transmit", e);
-                        throw new CardException(error.getMessage());
+                        error.setError(RuntimeException.class, error.getMessage());
+                        return null;
                     }
                 } else if (sw1 == 0x61) {
                     byte[] getResponseCmd = new byte[] {
@@ -367,7 +360,8 @@ public final class AssdTerminal extends Service {
                             rsp = internalTransmit(getResponseCmd,error);
                         } catch (RemoteException e) {
                             Log.e(TAG, "Error while internal transmit", e);
-                            throw new CardException(error.getMessage());
+                            error.setError(RuntimeException.class, error.getMessage());
+                            return null;
                         }
                         if (rsp.length >= 2 && rsp[rsp.length - 2] == 0x61) {
                             response = appendResponse(
