@@ -144,8 +144,8 @@ public final class AssdTerminal extends Service {
         mMediaReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                final boolean mediaMounted = intent.getAction().equals(
-                        "android.intent.action.MEDIA_MOUNTED");
+                final boolean mediaMounted = "android.intent.action.MEDIA_MOUNTED".equals(
+                        intent.getAction());
                 if (mediaMounted) {
                     Log.i(TAG, "New Media is mounted. Checking access rules"
                             + " for updates.");
@@ -289,6 +289,7 @@ public final class AssdTerminal extends Service {
             try {
                 rsp = protocolTransmit(cmd, error);
             } catch (Exception e) {
+                Log.e(TAG, "Exception: ", e);
                 if (commandName == null) {
                     error.setError(RuntimeException.class, e.getMessage());
                     return null;
@@ -338,7 +339,6 @@ public final class AssdTerminal extends Service {
 
             if (rsp.length >= 2) {
                 int sw1 = rsp[rsp.length - 2] & 0xFF;
-                int sw2 = rsp[rsp.length - 1] & 0xFF;
                 if (sw1 == 0x6C) {
                     command[cmd.length - 1] = rsp[rsp.length - 1];
                     try {
