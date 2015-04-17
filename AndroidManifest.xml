@@ -5,6 +5,7 @@
     android:versionName="1.0.0">
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="org.simalliance.openmobileapi.SYSTEM_TERMINAL"/>
 
     <application android:label="AssdTerminalService">
 
@@ -13,7 +14,7 @@
         <service android:name=".AssdTerminal"
             android:enabled="true"
             android:exported="true"
-            android:permission="org.simalliance.openmobileapi.SMARTCARD">
+            android:permission="org.simalliance.openmobileapi.BIND_TERMINAL">
             <intent-filter>
                 <action android:name="org.simalliance.openmobileapi.TERMINAL_DISCOVERY" />
             </intent-filter>

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -32,7 +33,7 @@ public final class AssdTerminal extends Service {
 
     private boolean isOpenedSuccesful;
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent) throws SecurityException {
         return mTerminalBinder;
     }
 
@@ -233,7 +234,7 @@ public final class AssdTerminal extends Service {
         }
 
         @Override
-        public byte[] simIOExchange(int fileID, String filePath, byte[] cmd, org.simalliance.openmobileapi.service.SmartcardError error)
+        public byte[] simIOExchange(int fileID, String filePath, byte[] cmd, SmartcardError error)
                 throws RemoteException {
             throw new RemoteException("SIM IO error!");
         }
