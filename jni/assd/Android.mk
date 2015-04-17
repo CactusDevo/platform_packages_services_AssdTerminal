@@ -8,5 +8,5 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES   := ASSDTerminal.cpp
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 
-
+include $(BUILD_SHARED_LIBRARY)
 
