@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -39,7 +38,7 @@ public final class AssdTerminal extends Service {
 
     @Override
     public void onCreate() {
-        registerMediaMountedEvent(this);
+        registerMediaMountedEvent();
         if (!JNILoaded) {
             return;
         }
@@ -61,13 +60,13 @@ public final class AssdTerminal extends Service {
             }
         }
         isOpenedSuccesful = false;
-        unregisterMediaMountedEvent(this);
+        unregisterMediaMountedEvent();
         super.onDestroy();
     }
 
 
     static {
-        Runtime.getRuntime().loadLibrary("assd");
+        System.loadLibrary("assd");
         JNILoaded = true;
     }
 
@@ -83,7 +82,7 @@ public final class AssdTerminal extends Service {
         return SD_TERMINAL;
     }
 
-    private void registerMediaMountedEvent(Context context) {
+    private void registerMediaMountedEvent() {
         Log.v(TAG, "register MEDIA_MOUNTED event");
 
         IntentFilter intentFilter = new IntentFilter(
@@ -101,13 +100,13 @@ public final class AssdTerminal extends Service {
                 }
             }
         };
-        context.registerReceiver(mMediaReceiver, intentFilter);
+        registerReceiver(mMediaReceiver, intentFilter);
     }
 
-    private void unregisterMediaMountedEvent(Context context) {
+    private void unregisterMediaMountedEvent() {
         if (mMediaReceiver != null) {
             Log.v(TAG, "unregister MEDIA_MOUNTED event");
-            context.unregisterReceiver(mMediaReceiver);
+            unregisterReceiver(mMediaReceiver);
             mMediaReceiver = null;
         }
     }
