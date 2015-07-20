@@ -39,8 +39,6 @@ public final class AssdTerminal extends Service {
 
     private static final String TAG = "AssdTerminal";
 
-    public static final String SD_TERMINAL = "SD";
-
     public static final String ACTION_SD_STATE_CHANGED = "org.simalliance.openmobileapi.action.SD_STATE_CHANGED";
 
     private final ITerminalService.Stub mTerminalBinder = new TerminalServiceImplementation();
@@ -97,10 +95,6 @@ public final class AssdTerminal extends Service {
 
     private native byte[] transmit(byte[] command) throws Exception;
 
-    public static String getType() {
-        return SD_TERMINAL;
-    }
-
     private void registerMediaMountedEvent() {
         Log.v(TAG, "register MEDIA_MOUNTED event");
 
@@ -134,10 +128,6 @@ public final class AssdTerminal extends Service {
      * The Terminal service interface implementation.
      */
     final class TerminalServiceImplementation extends ITerminalService.Stub {
-        @Override
-        public String getType() {
-            return AssdTerminal.getType();
-        }
 
         @Override
         public OpenLogicalChannelResponse internalOpenLogicalChannel(
